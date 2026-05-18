@@ -1,6 +1,9 @@
 import csv
+import logging
 from typing import Dict, Any
 from bal_pars.config import CSV_PROD, CSV_FIELDS
+
+logger = logging.getLogger(__name__)
 
 # Внутренние переменные модуля (скрыты от других файлов)
 _file_prod = None
@@ -15,13 +18,15 @@ def init_csv(prod_path: str = "product.csv", barcode_path: str = "barcode_parser
     global _file_prod, _writer_prod, _file_barcode, _writer_barcode
     
     # Инициализация продуктов
-    _file_prod = open(prod_path, "w", newline="", encoding="utf-8")
+    logger.info(f"Initializing CSV: {prod_path}")
+    _file_prod = open(prod_path, "a", newline="", encoding="utf-8")
     _writer_prod = csv.DictWriter(_file_prod, fieldnames=CSV_PROD)
     _writer_prod.writeheader()
     _file_prod.flush()
     
     # Инициализация штрихкодов
-    _file_barcode = open(barcode_path, "w", newline="", encoding="utf-8")
+    logger.info(f"Initializing CSV: {barcode_path}")
+    _file_barcode = open(barcode_path, "a", newline="", encoding="utf-8")
     _writer_barcode = csv.DictWriter(_file_barcode, fieldnames=CSV_FIELDS)
     _writer_barcode.writeheader()
     _file_barcode.flush()
@@ -50,6 +55,7 @@ def write_barcode_row(row: Dict[str, Any]):
 def close_csv():
     """Вызывается в самом конце работы программы, чтобы корректно закрыть файлы."""
     global _file_prod, _file_barcode
+    logger.info("Closing CSV files.")
     if _file_prod:
         _file_prod.close()
     if _file_barcode:

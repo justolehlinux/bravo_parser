@@ -5,21 +5,24 @@ BASE_URL = "https://b2b.balkanicadistral.com/Producto.aspx"
 LOGIN_URL = "https://b2b.balkanicadistral.com/ru"
 
 CSV_PROD = [
-    "product_code",
-    "title",
-    "price",
+    "seller_ids/product_code",
+    "name",
+    "seller_ids/price",
     "category",
-    "subcategory",
-    "brand", 
+    "categ_id",
     "sales_unit", 
-    "gross_weight", 
-    "country", 
+    "weight", 
     "barcode", 
     "package",
-    "image_url", 
     "contains", 
-    "minimum_purchase", 
-    "product_url"
+    "seller_ids/min_qty",
+    "purchase_ok",
+    "active",
+    "is_storable",
+    "available_in_pos",
+    "seller_ids/partner_id",
+    "sale_ok"
+
 ]
 
 CSV_FIELDS = [

@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
-import argparse
 import sys
+import logging
 import requests
 from bs4 import BeautifulSoup
 
 from bal_pars.config import BASE_URL, USERNAME, PASSWORD, HEADERS, LOGIN_URL
 from bal_pars.parse_prod import parse_product
 
+logger = logging.getLogger(__name__)
+
 
 def try_login():
     global session
     session = requests.Session()
     try:
+        logger.info("Attempting login...")
         session = login(session)
         # Visit the catalog page to ensure the ASP.NET session state is fully initialized
         session.get("https://b2b.balkanicadistral.com/Catalogo.aspx", headers=HEADERS, timeout=20)
-    except Exception as e:
-        print(f"Login failed: {e}", file=sys.stderr)
+        logger.info("Login successful.")
+    except Exception:
+        logger.exception("Login failed")
         sys.exit(1)
 
 def login(session):
@@ -64,7 +68,7 @@ def fetch_page(product_code):
 
     # Detect ASP.NET server-side crashes that return 200 OK but show an error message
     if "Object reference not set to an instance of an object" in response.text:
-        print(f"[!] Server error for product {product_code}. Skipping.", file=sys.stderr)
+        logger.warning(f"Server error for product {product_code} (Object reference error). Skipping.")
         return None
 
     return response.text
@@ -78,7 +82,7 @@ def start_pars(code):
         if html:
             parse_product(html, code)
         else:
-            print(f"Skipping product {code} due to server error.", file=sys.stderr)
+            logger.warning(f"Skipping product {code} due to empty response or server error.")
             
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching product page: {e}", file=sys.stderr)
+        logger.error(f"Error fetching product page {code}: {e}")

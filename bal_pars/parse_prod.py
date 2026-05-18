@@ -1,8 +1,10 @@
+import logging
 from bs4 import BeautifulSoup
 from bal_pars.cvs_point import write_prod_row
 from bal_pars.config import BASE_URL, CSV_PROD
 from bal_pars.barcodeparser import barcode_parser
 
+logger = logging.getLogger(__name__)
 
 def visible_text(element):
     if not element:
@@ -21,25 +23,22 @@ def parse_product(html, code):
     # This also catches cases where the page is an error page (like the "Object reference..." page)
     # but returns a 200 OK status.
     if not title_tag or not title_tag.get_text(strip=True):
+        logger.warning(f"Product {code}: Page layout unexpected or product not found (no title).")
         return None, None # Return None for data and None for soup
 
     data = {field: "" for field in CSV_PROD}
-    data["product_code"] = code
-    data["product_url"] = f"{BASE_URL}?Codigo={code}&IdOportunidad=0"
-    data["title"] = title_tag.get_text(strip=True)
+    data["seller_ids/product_code"] = code
+    data["name"] = title_tag.get_text(strip=True)
     price_tag = soup.select_one("span.price")
     price = price_tag.get_text(strip=True).split(" ")[0] if price_tag else ""
-    data["price"] = float(price.replace(",", ".")) if price else "" # type: ignore
+    data["seller_ids/price"] = float(price.replace(",", ".")) if price else "" # type: ignore
     KEY_MAPPING = {
-        "код": "product_code",
-        "подкатегория": "subcategory",
+        "код": "seller_ids/product_code",
+        "подкатегория": "categ_id",
         "категория": "category",
-        "бренд": "brand",
-        "марка": "brand",
         "продажная единица": "sales_unit",
         "единица": "sales_unit",
-        "вес брутто": "gross_weight",
-        "страна": "country"
+        "вес брутто": "weight"
     }
 
     # 2. Сама логика парсинга становится очень компактной:
@@ -52,6 +51,11 @@ def parse_product(html, code):
                 
             key = dt.get_text(strip=True).lower()
             val = dd.get_text(strip=True)
+            
+            if key == "вес брутто":
+                val = '{0:.2f}'.format(float(val.split(" ")[0].replace(",", ".")))
+            if val == "ШТ": val = "Единицы"
+            if val == "ШТ": val = "Единицы"
             
             # Ищем, какая подстрока из маппинга содержится в нашем ключе
             for match_word, target_field in KEY_MAPPING.items():
@@ -67,17 +71,19 @@ def parse_product(html, code):
             val = val.strip()
             if "упаковка" in key: data["package"] = val
             elif "содержит" in key: data["contains"] = val
-            elif "минимальная покупка" in key: data["minimum_purchase"] = val
+            elif "минимальная покупка" in key:
+                data["seller_ids/min_qty"] = val.split(" ")[0]
             
-    # Main image selector
-    img = soup.select_one("#product-images .overlay-container img")
-    if img:
-        src = img.get("src", "")
-        if src and not src.startswith("http"):
-            src = "https://b2b.balkanicadistral.com/" + src.lstrip("/")
-        data["image_url"] = src
+    
+    data["purchase_ok"] = True
+    data["active"] = True
+    data["is_storable"] = True
+    data["available_in_pos"] = True
+    data["seller_ids/partner_id"] = "BALKANICA DISTRAL SOCIEDAD LIMITADA"
+    data["sale_ok"] = True
 
 
     barcode_section = soup.select_one("#h2tab4")
     data["barcode"] = barcode_parser(code, barcode_section)
     write_prod_row(data)  # Assuming prod_writer is defined globally or passed as an argument
+    logger.info(f"Successfully parsed and saved product: {code}")
