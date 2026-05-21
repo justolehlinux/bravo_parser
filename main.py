@@ -20,7 +20,7 @@ def main():
     try_login()
     init_csv()
     
-    with open("products_codes.txt", "r", encoding="utf-8") as f:
+    with open("products_codes_new.txt", "r", encoding="utf-8") as f:
         product_codes = f.read().splitlines()
 
     logger.info(f"Loaded {len(product_codes)} product codes to process.")
