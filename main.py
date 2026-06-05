@@ -32,5 +32,5 @@ def main():
     close_csv()
     logger.info("Finished processing all codes.")
 
-if __name__ == "__main__":
+if __name__ == "__main__":  
     main()

@@ -221,3 +221,4 @@ __marimo__/
 .cvs
 
 product*.csv
+*.gsheet

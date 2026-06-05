@@ -32,10 +32,12 @@ def parse_product(html, code):
     price_tag = soup.select_one("span.price")
     price = price_tag.get_text(strip=True).split(" ")[0] if price_tag else ""
     data["seller_ids/price"] = float(price.replace(",", ".")) if price else "" # type: ignore
+    data["categ_id"] = "NONE"
+    data["list_price"] = data["seller_ids/price"] * 2
+
+
     KEY_MAPPING = {
         "код": "seller_ids/product_code",
-        "подкатегория": "categ_id",
-        "категория": "category",
         "продажная единица": "sales_unit",
         "единица": "sales_unit",
         "вес брутто": "weight"
