@@ -33,7 +33,7 @@ def parse_product(html, code):
     price = price_tag.get_text(strip=True).split(" ")[0] if price_tag else ""
     data["seller_ids/price"] = float(price.replace(",", ".")) if price else "" # type: ignore
     data["categ_id"] = "NONE"
-    data["list_price"] = round(data["seller_ids/price"] * 2, 1)
+    data["list_price"] = round(data["seller_ids/price"] * 1.71, 1)
 
 
     KEY_MAPPING = {
