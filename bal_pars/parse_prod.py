@@ -33,7 +33,7 @@ def parse_product(html, code):
     price = price_tag.get_text(strip=True).split(" ")[0] if price_tag else ""
     data["seller_ids/price"] = float(price.replace(",", ".")) if price else "" # type: ignore
     data["categ_id"] = "NONE"
-    data["list_price"] = round(data["seller_ids/price"] * 1.71, 1)
+    data["list_price"] = round(data["seller_ids/price"] * 1.75, 1)
 
 
     KEY_MAPPING = {
@@ -73,8 +73,6 @@ def parse_product(html, code):
             val = val.strip()
             if "упаковка" in key: data["package"] = val
             elif "содержит" in key: data["contains"] = val
-            elif "минимальная покупка" in key:
-                data["seller_ids/min_qty"] = val.split(" ")[0]
             
     
     data["purchase_ok"] = True

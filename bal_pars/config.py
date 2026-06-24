@@ -15,7 +15,6 @@ CSV_PROD = [
     "package",
     "list_price",
     "contains", 
-    "seller_ids/min_qty",
     "purchase_ok",
     "active",
     "is_storable",
