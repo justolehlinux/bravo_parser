@@ -17,14 +17,14 @@ def try_login():
         logger.info("Attempting login...")
         session = login(session)
         # Visit the catalog page to ensure the ASP.NET session state is fully initialized
-        session.get("https://b2b.balkanicadistral.com/Catalogo.aspx", headers=HEADERS, timeout=20)
+        session.get("https://b2b.balkanicadistral.com/Catalogo.aspx", headers=HEADERS, timeout=40)
         logger.info("Login successful.")
     except Exception:
         logger.exception("Login failed")
         sys.exit(1)
 
 def login(session):
-    response = session.get(LOGIN_URL, headers=HEADERS, timeout=20)
+    response = session.get(LOGIN_URL, headers=HEADERS, timeout=40)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
 
@@ -48,7 +48,7 @@ def login(session):
     post_headers["Origin"] = "https://b2b.balkanicadistral.com"
 
     response = session.post(LOGIN_URL, headers=post_headers, data=login_data,
-                            timeout=20, allow_redirects=True)
+                            timeout=40, allow_redirects=True)
     response.raise_for_status()
 
     if "Login.aspx" in response.url and "txUsuario" in response.text:
