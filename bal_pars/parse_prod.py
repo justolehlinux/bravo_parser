@@ -1,4 +1,5 @@
 import logging
+import re
 from bs4 import BeautifulSoup
 from bal_pars.cvs_point import write_prod_row
 from bal_pars.config import BASE_URL, CSV_PROD
@@ -24,16 +25,19 @@ def parse_product(html, code):
     # but returns a 200 OK status.
     if not title_tag or not title_tag.get_text(strip=True):
         logger.warning(f"Product {code}: Page layout unexpected or product not found (no title).")
-        return None, None # Return None for data and None for soup
+        return False
 
     data = {field: "" for field in CSV_PROD}
     data["seller_ids/product_code"] = code
     data["name"] = title_tag.get_text(strip=True)
     price_tag = soup.select_one("span.price")
     price = price_tag.get_text(strip=True).split(" ")[0] if price_tag else ""
-    data["seller_ids/price"] = float(price.replace(",", ".")) if price else "" # type: ignore
+    purchase_price = float(price.replace(",", ".")) if price else None
+    data["seller_ids/price"] = purchase_price if purchase_price is not None else ""
     data["categ_id"] = "NONE"
-    data["list_price"] = round(data["seller_ids/price"] * 1.75, 1)
+    if purchase_price is not None:
+        markup = 2.0 if purchase_price < 1 else 1.80
+        data["list_price"] = round(purchase_price * markup, 1)
 
 
     KEY_MAPPING = {
@@ -73,6 +77,10 @@ def parse_product(html, code):
             val = val.strip()
             if "упаковка" in key: data["package"] = val
             elif "содержит" in key: data["contains"] = val
+            elif "минимальная покупка" in key:
+                min_qty = re.search(r"\d+(?:[.,]\d+)?", val)
+                if min_qty:
+                    data["seller_ids/min_qty"] = min_qty.group(0).replace(",", ".")
             
     
     data["purchase_ok"] = True
@@ -87,3 +95,4 @@ def parse_product(html, code):
     data["barcode"] = barcode_parser(code, barcode_section)
     write_prod_row(data)  # Assuming prod_writer is defined globally or passed as an argument
     logger.info(f"Successfully parsed and saved product: {code}")
+    return True

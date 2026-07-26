@@ -80,9 +80,11 @@ def start_pars(code):
         
         # Only parse if the HTML is valid and didn't hit the server error
         if html:
-            parse_product(html, code)
+            return bool(parse_product(html, code))
         else:
             logger.warning(f"Skipping product {code} due to empty response or server error.")
             
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching product page {code}: {e}")
+
+    return False
